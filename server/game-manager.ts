@@ -237,6 +237,9 @@ export class GameManager {
 
     const leaderboard = [...roomState.players].sort((a, b) => b.score - a.score);
     
+    // Debug: Log the leaderboard data being sent
+    console.log("Game ending, sending leaderboard:", JSON.stringify(leaderboard, null, 2));
+    
     io.to(roomId).emit("game:end", {
       leaderboard,
       finalScores: Object.fromEntries(roomState.players.map(p => [p.id, p.score])),
