@@ -48,6 +48,8 @@ interface GameState {
   setGameStatus: (status: 'menu' | 'lobby' | 'active' | 'completed') => void;
   setScore: (score: number) => void;
   setStreak: (streak: number) => void;
+  setCorrectAnswers: (correctAnswers: number) => void;
+  setTotalAnswers: (totalAnswers: number) => void;
   incrementCorrectAnswers: () => void;
   incrementTotalAnswers: () => void;
   toggleSound: () => void;
@@ -112,6 +114,8 @@ export const useGameState = create<GameState>((set, get) => ({
   setGameStatus: (status) => set({ gameStatus: status }),
   setScore: (score) => set({ score }),
   setStreak: (streak) => set({ streak }),
+  setCorrectAnswers: (correctAnswers) => set({ correctAnswers }),
+  setTotalAnswers: (totalAnswers) => set({ totalAnswers }),
   incrementCorrectAnswers: () => set(state => ({ correctAnswers: state.correctAnswers + 1 })),
   incrementTotalAnswers: () => set(state => ({ totalAnswers: state.totalAnswers + 1 })),
   toggleSound: () => {

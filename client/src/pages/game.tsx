@@ -26,6 +26,8 @@ export default function Game() {
     setTimeRemaining,
     setScore,
     setStreak,
+    setCorrectAnswers,
+    setTotalAnswers,
     setPlayers,
     incrementCorrectAnswers,
     incrementTotalAnswers,
@@ -127,6 +129,13 @@ export default function Game() {
           if (currentPlayer) {
             setScore(currentPlayer.score);
             setStreak(currentPlayer.streak);
+            // Also update the other statistics that results page needs
+            if (currentPlayer.correctAnswers !== undefined) {
+              setCorrectAnswers(currentPlayer.correctAnswers);
+            }
+            if (currentPlayer.totalAnswers !== undefined) {
+              setTotalAnswers(currentPlayer.totalAnswers);
+            }
           }
         }
         setGameStatus("completed");
@@ -142,7 +151,7 @@ export default function Game() {
         socketManager.off("game:end", handleGameEnd);
       };
     }
-  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setTimeRemaining, setGameStatus, addToast, incrementCorrectAnswers, incrementTotalAnswers, setCurrentAnswer, setLastQuestion, addQuestionToHistory, currentQuestion, currentAnswer]);
+  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setCorrectAnswers, setTotalAnswers, setTimeRemaining, setGameStatus, addToast, incrementCorrectAnswers, incrementTotalAnswers, setCurrentAnswer, setLastQuestion, addQuestionToHistory, currentQuestion, currentAnswer]);
 
   const handleAnswerResult = (correct: boolean) => {
     setAnswerFeedback(correct);
