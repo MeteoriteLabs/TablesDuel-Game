@@ -115,36 +115,60 @@ export default function Results() {
             {leaderboard.map((player, index) => (
               <div
                 key={player.id}
-                className={`flex items-center justify-between p-4 rounded-lg ${
+                className={`p-4 rounded-lg ${
                   index === 0 
                     ? 'bg-primary/10 border-2 border-primary' 
                     : 'bg-muted/50'
                 }`}
                 data-testid={`player-result-${index}`}
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                    index === 0 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {index === 0 ? <Trophy className="w-4 h-4" /> : index + 1}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                      index === 0 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {index === 0 ? <Trophy className="w-4 h-4" /> : index + 1}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-foreground" data-testid={`text-player-name-${index}`}>
+                        {player.name}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {index === 0 ? "Winner!" : "Good effort!"}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-semibold text-foreground" data-testid={`text-player-name-${index}`}>
-                      {player.name}
+                  <div className="text-right">
+                    <div className={`text-xl font-bold ${index === 0 ? 'text-primary' : 'text-foreground'}`}
+                         data-testid={`text-player-score-${index}`}>
+                      {player.score}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {index === 0 ? "Winner!" : "Good effort!"}
-                    </div>
+                    <div className="text-sm text-muted-foreground">points</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className={`text-xl font-bold ${index === 0 ? 'text-primary' : 'text-foreground'}`}
-                       data-testid={`text-player-score-${index}`}>
-                    {player.score}
+                
+                {/* Detailed Statistics */}
+                <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="bg-background/50 rounded-lg p-2">
+                    <div className="font-semibold text-foreground" data-testid={`text-player-correct-${index}`}>
+                      {player.correctAnswers || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Correct</div>
                   </div>
-                  <div className="text-sm text-muted-foreground">points</div>
+                  <div className="bg-background/50 rounded-lg p-2">
+                    <div className="font-semibold text-foreground" data-testid={`text-player-accuracy-${index}`}>
+                      {player.accuracy || 0}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">Accuracy</div>
+                  </div>
+                  <div className="bg-background/50 rounded-lg p-2">
+                    <div className="font-semibold text-foreground" data-testid={`text-player-total-${index}`}>
+                      {player.totalAnswers || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Total</div>
+                  </div>
                 </div>
               </div>
             ))}

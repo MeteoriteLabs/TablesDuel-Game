@@ -14,6 +14,9 @@ interface GameState {
   
   // Game state
   currentQuestion: Question | null;
+  lastQuestion: Question | null;
+  lastAnswer: string;
+  lastCorrectAnswer: number | null;
   questionIndex: number;
   currentAnswer: string;
   timeRemaining: number | null;
@@ -36,6 +39,7 @@ interface GameState {
   setPlayerId: (playerId: string | null) => void;
   setPlayers: (players: PlayerState[]) => void;
   setCurrentQuestion: (question: Question | null) => void;
+  setLastQuestion: (question: Question | null, answer: string, correctAnswer: number | null) => void;
   setQuestionIndex: (index: number) => void;
   setCurrentAnswer: (answer: string) => void;
   setTimeRemaining: (time: number | null) => void;
@@ -64,6 +68,9 @@ export const useGameState = create<GameState>((set, get) => ({
   playerId: null,
   players: [],
   currentQuestion: null,
+  lastQuestion: null,
+  lastAnswer: '',
+  lastCorrectAnswer: null,
   questionIndex: 0,
   currentAnswer: '',
   timeRemaining: null,
@@ -82,6 +89,11 @@ export const useGameState = create<GameState>((set, get) => ({
   setPlayerId: (playerId) => set({ playerId }),
   setPlayers: (players) => set({ players }),
   setCurrentQuestion: (question) => set({ currentQuestion: question }),
+  setLastQuestion: (question, answer, correctAnswer) => set({ 
+    lastQuestion: question, 
+    lastAnswer: answer, 
+    lastCorrectAnswer: correctAnswer 
+  }),
   setQuestionIndex: (index) => set({ questionIndex: index }),
   setCurrentAnswer: (answer) => set({ currentAnswer: answer }),
   setTimeRemaining: (time) => set({ timeRemaining: time }),
@@ -97,6 +109,9 @@ export const useGameState = create<GameState>((set, get) => ({
   },
   resetGame: () => set({
     currentQuestion: null,
+    lastQuestion: null,
+    lastAnswer: '',
+    lastCorrectAnswer: null,
     questionIndex: 0,
     currentAnswer: '',
     timeRemaining: null,
