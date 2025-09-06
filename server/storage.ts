@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type GameRoom, type GameParticipant, type InsertGameRoomSchema, type InsertGameParticipantSchema } from "@shared/schema";
+import { type User, type InsertUser, type GameRoom, type GameParticipant } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {

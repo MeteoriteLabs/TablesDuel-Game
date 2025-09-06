@@ -18,6 +18,8 @@ export function LandingForm() {
     setGameStatus,
     setCurrentQuestion,
     setQuestionIndex,
+    setRoomId,
+    setPlayerId,
     resetGame,
   } = useGameState();
 
@@ -44,6 +46,13 @@ export function LandingForm() {
       } else {
         // Two player mode - connect to WebSocket and create room
         await socketManager.connect();
+        
+        // Listen for room creation response
+        socketManager.on("room:created", (data) => {
+          setRoomId(data.roomId);
+          setPlayerId(data.playerId);
+        });
+        
         socketManager.send("room:create", {
           playerName: playerName.trim(),
           settings,
