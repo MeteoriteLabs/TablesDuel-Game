@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Zap, GamepadIcon } from "lucide-react";
 import { useGameState } from "@/lib/game-state";
 import { socketManager } from "@/lib/socket";
 import { generateQuestions } from "@/lib/question-generator";
@@ -10,12 +10,9 @@ import { generateQuestions } from "@/lib/question-generator";
 export function LandingForm() {
   const {
     playerName,
-    gameMode,
-    settings,
     roomId,
     setPlayerName,
     setGameMode,
-    setSettings,
     setGameStatus,
     setCurrentQuestion,
     setQuestionIndex,
@@ -25,8 +22,10 @@ export function LandingForm() {
   } = useGameState();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showJoinForm, setShowJoinForm] = useState(false);
+  const [joinRoomId, setJoinRoomId] = useState("");
 
-  const handleStartGame = async () => {
+  const handleSinglePlayer = async () => {
     if (!playerName.trim()) {
       alert("Please enter your name");
       return;
@@ -34,52 +33,25 @@ export function LandingForm() {
 
     setIsLoading(true);
     resetGame();
+    setGameMode('1-player');
 
     try {
-      if (gameMode === "1-player") {
-        // Single player mode - generate questions locally
-        const questionGen = generateQuestions(settings, Date.now() % 100000);
-        const firstQuestion = questionGen.next().value;
-        
-        setCurrentQuestion(firstQuestion);
-        setQuestionIndex(0);
-        setGameStatus("active");
-      } else {
-        // Two player mode - connect to WebSocket
-        await socketManager.connect();
-        
-        if (roomId) {
-          // Join existing room
-          socketManager.on("room:joined", (data) => {
-            setRoomId(data.roomId);
-            setPlayerId(data.playerId);
-            setGameStatus("lobby");
-          });
-
-          socketManager.on("error", (data) => {
-            alert(data.message || "Failed to join room");
-            setRoomId(null);
-            setGameStatus("menu");
-          });
-
-          socketManager.send("room:join", {
-            roomId,
-            playerName: playerName.trim(),
-          });
-        } else {
-          // Create new room
-          socketManager.on("room:created", (data) => {
-            setRoomId(data.roomId);
-            setPlayerId(data.playerId);
-            setGameStatus("lobby");
-          });
-          
-          socketManager.send("room:create", {
-            playerName: playerName.trim(),
-            settings,
-          });
-        }
-      }
+      // Single player mode - generate questions locally
+      const defaultSettings = {
+        mode: 'time' as const,
+        timeLimitSec: 60,
+        targetScore: 20,
+        minTable: 2,
+        maxTable: 12,
+        difficulty: 'medium' as const
+      };
+      
+      const questionGen = generateQuestions(defaultSettings, Date.now() % 100000);
+      const firstQuestion = questionGen.next().value;
+      
+      setCurrentQuestion(firstQuestion);
+      setQuestionIndex(0);
+      setGameStatus("active");
     } catch (error) {
       console.error("Error starting game:", error);
       alert("Failed to start game. Please try again.");
@@ -88,18 +60,87 @@ export function LandingForm() {
     }
   };
 
-  const handleQuickPlay = (difficulty: "easy" | "hard") => {
-    const quickSettings = {
-      ...settings,
-      difficulty,
-      mode: "time" as const,
-      timeLimitSec: 60,
-    };
-    setSettings(quickSettings);
-    setPlayerName("Player");
-    setGameMode("1-player");
-    setTimeout(handleStartGame, 100);
+  const handleCreateRoom = async () => {
+    if (!playerName.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+
+    setIsLoading(true);
+    resetGame();
+    setGameMode('2-player');
+
+    try {
+      await socketManager.connect();
+      
+      socketManager.on("room:created", (data) => {
+        setRoomId(data.roomId);
+        setPlayerId(data.playerId);
+        setGameStatus("lobby");
+      });
+      
+      const defaultSettings = {
+        mode: 'time' as const,
+        timeLimitSec: 60,
+        targetScore: 20,
+        minTable: 2,
+        maxTable: 12,
+        difficulty: 'medium' as const
+      };
+      
+      socketManager.send("room:create", {
+        playerName: playerName.trim(),
+        settings: defaultSettings,
+      });
+    } catch (error) {
+      console.error("Error creating room:", error);
+      alert("Failed to create room. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleJoinRoom = async () => {
+    if (!playerName.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+    
+    if (!joinRoomId.trim()) {
+      alert("Please enter a room ID");
+      return;
+    }
+
+    setIsLoading(true);
+    resetGame();
+    setGameMode('2-player');
+
+    try {
+      await socketManager.connect();
+      
+      socketManager.on("room:joined", (data) => {
+        setRoomId(data.roomId);
+        setPlayerId(data.playerId);
+        setGameStatus("lobby");
+      });
+
+      socketManager.on("error", (data) => {
+        alert(data.message || "Failed to join room");
+        setGameStatus("menu");
+      });
+
+      socketManager.send("room:join", {
+        roomId: joinRoomId.trim().toUpperCase(),
+        playerName: playerName.trim(),
+      });
+    } catch (error) {
+      console.error("Error joining room:", error);
+      alert("Failed to join room. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   return (
     <div className="space-y-6 pt-8">
@@ -109,12 +150,12 @@ export function LandingForm() {
         </div>
         <h2 className="text-3xl font-bold text-foreground">Tables Duel</h2>
         <p className="text-muted-foreground">
-          {roomId ? `Join room ${roomId} and compete with a friend!` : "Master your times tables — solo or with a friend!"}
+          {roomId ? `Join room ${roomId} and compete with a friend!` : "Master your times tables!"}
         </p>
       </div>
 
+      {/* Player Name Input */}
       <div className="bg-card rounded-2xl p-6 shadow-lg space-y-4">
-        {/* Player Name Input */}
         <div className="space-y-2">
           <Label htmlFor="player-name" className="text-sm font-medium text-foreground">
             Your Name
@@ -128,138 +169,80 @@ export function LandingForm() {
             data-testid="input-player-name"
           />
         </div>
-
-        {/* Game Mode Toggle */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-foreground">Game Mode</Label>
-          <div className="bg-muted p-1 rounded-lg flex">
-            <Button
-              variant={gameMode === "1-player" ? "default" : "ghost"}
-              className="flex-1 py-2 px-4"
-              onClick={() => setGameMode("1-player")}
-              data-testid="button-single-player"
-            >
-              1 Player
-            </Button>
-            <Button
-              variant={gameMode === "2-player" ? "default" : "ghost"}
-              className="flex-1 py-2 px-4"
-              onClick={() => setGameMode("2-player")}
-              data-testid="button-two-player"
-            >
-              2 Players
-            </Button>
-          </div>
-        </div>
-
-        {/* Settings Grid */}
-        <div className="grid grid-cols-1 gap-4">
-          {/* Tables Range */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Tables Range</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <Select
-                value={settings.minTable.toString()}
-                onValueChange={(value) => setSettings({ ...settings, minTable: parseInt(value) })}
-              >
-                <SelectTrigger data-testid="select-min-table">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[2, 3, 4, 5].map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
-                      From {num}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={settings.maxTable.toString()}
-                onValueChange={(value) => setSettings({ ...settings, maxTable: parseInt(value) })}
-              >
-                <SelectTrigger data-testid="select-max-table">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[10, 12, 15, 20].map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
-                      To {num}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Game Mode & Difficulty */}
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">Mode</Label>
-              <Select
-                value={settings.mode}
-                onValueChange={(value) => setSettings({ ...settings, mode: value as any })}
-              >
-                <SelectTrigger data-testid="select-game-mode">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="time">Time Attack (60s)</SelectItem>
-                  <SelectItem value="target">Target Score (20 pts)</SelectItem>
-                  <SelectItem value="endless">Endless</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground">Difficulty</Label>
-              <Select
-                value={settings.difficulty}
-                onValueChange={(value) => setSettings({ ...settings, difficulty: value as any })}
-              >
-                <SelectTrigger data-testid="select-difficulty">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="easy">Easy (× up to 10)</SelectItem>
-                  <SelectItem value="medium">Medium (× up to 12)</SelectItem>
-                  <SelectItem value="hard">Hard (× up to 20)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Start Button */}
-        <Button
-          onClick={handleStartGame}
-          className="w-full py-4 gradient-primary text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] min-h-[56px]"
-          disabled={isLoading}
-          data-testid="button-start-game"
-        >
-          {isLoading ? (roomId ? "Joining..." : "Starting...") : (roomId ? "Join Room" : "Start Game")}
-        </Button>
       </div>
 
-      {/* Quick Play Buttons */}
-      <div className="space-y-3">
-        <p className="text-center text-sm text-muted-foreground">Quick Play</p>
-        <div className="grid grid-cols-2 gap-3">
+      {/* Game Options */}
+      <div className="space-y-4">
+        {/* Single Player Button */}
+        <Button
+          onClick={handleSinglePlayer}
+          className="w-full py-6 gradient-primary text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
+          disabled={isLoading}
+          data-testid="button-single-player"
+        >
+          <Zap className="w-5 h-5 mr-2" />
+          {isLoading ? "Starting..." : "Play Solo (60s Challenge)"} 
+        </Button>
+
+        {/* Create Room Button */}
+        <Button
+          onClick={handleCreateRoom}
+          variant="outline"
+          className="w-full py-6 rounded-xl font-semibold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          disabled={isLoading}
+          data-testid="button-create-room"
+        >
+          <Users className="w-5 h-5 mr-2" />
+          {isLoading ? "Creating..." : "Create Multiplayer Room"}
+        </Button>
+
+        {/* Join Room Toggle */}
+        {!showJoinForm ? (
           <Button
-            variant="outline"
-            onClick={() => handleQuickPlay("easy")}
-            className="py-3 px-4 rounded-xl text-sm font-medium"
-            data-testid="button-quick-play-easy"
+            onClick={() => setShowJoinForm(true)}
+            variant="ghost"
+            className="w-full py-4 text-muted-foreground hover:text-foreground"
+            data-testid="button-show-join"
           >
-            Easy Mode
+            <GamepadIcon className="w-4 h-4 mr-2" />
+            Join Existing Room
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => handleQuickPlay("hard")}
-            className="py-3 px-4 rounded-xl text-sm font-medium"
-            data-testid="button-quick-play-hard"
-          >
-            Challenge Mode
-          </Button>
-        </div>
+        ) : (
+          <div className="bg-card rounded-2xl p-6 shadow-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground">Join Room</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowJoinForm(false)}
+                data-testid="button-cancel-join"
+              >
+                Cancel
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="room-id" className="text-sm font-medium text-foreground">
+                Room ID
+              </Label>
+              <Input
+                id="room-id"
+                type="text"
+                placeholder="Enter room ID (e.g. ABC123)"
+                value={joinRoomId}
+                onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
+                data-testid="input-room-id"
+              />
+            </div>
+            <Button
+              onClick={handleJoinRoom}
+              className="w-full py-3 gradient-secondary text-secondary-foreground font-semibold rounded-xl"
+              disabled={isLoading}
+              data-testid="button-join-room"
+            >
+              {isLoading ? "Joining..." : "Join Room"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
