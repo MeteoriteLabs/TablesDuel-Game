@@ -54,6 +54,9 @@ export const playerStateSchema = z.object({
   score: z.number().default(0),
   streak: z.number().default(0),
   isReady: z.boolean().default(false),
+  correctAnswers: z.number().default(0),
+  totalAnswers: z.number().default(0),
+  accuracy: z.number().default(0),
 });
 
 // Room State Schema

@@ -41,6 +41,9 @@ export class GameManager {
         score: 0,
         streak: 0,
         isReady: false,
+        correctAnswers: 0,
+        totalAnswers: 0,
+        accuracy: 0,
       }],
       settings,
       status: "waiting",
@@ -72,6 +75,9 @@ export class GameManager {
       score: 0,
       streak: 0,
       isReady: false,
+      correctAnswers: 0,
+      totalAnswers: 0,
+      accuracy: 0,
     });
 
     this.rooms.set(roomId, roomState);
@@ -146,7 +152,10 @@ export class GameManager {
 
     correct = answer === correctAnswer;
 
+    // Update statistics
+    player.totalAnswers += 1;
     if (correct) {
+      player.correctAnswers += 1;
       const points = roomState.settings.difficulty === "easy" ? 1 : 
                     roomState.settings.difficulty === "medium" ? 2 : 3;
       player.score += points;
@@ -159,6 +168,9 @@ export class GameManager {
     } else {
       player.streak = 0;
     }
+
+    // Calculate accuracy
+    player.accuracy = Math.round((player.correctAnswers / player.totalAnswers) * 100);
 
     // Update in storage
     const participants = await storage.getGameParticipants(roomId);
