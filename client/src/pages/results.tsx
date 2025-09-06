@@ -23,8 +23,29 @@ export default function Results() {
 
   const { toast } = useToast();
 
-  const accuracy = totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0;
-  const avgSpeed = totalAnswers > 0 ? (60 / totalAnswers).toFixed(1) : "0.0";
+  // For multiplayer, use server data; for single-player, use local state
+  const getPlayerStats = () => {
+    if (gameMode === "2-player" && currentPlayerResult) {
+      return {
+        score: currentPlayerResult.score || 0,
+        correctAnswers: currentPlayerResult.correctAnswers || 0,
+        totalAnswers: currentPlayerResult.totalAnswers || 0,
+        accuracy: currentPlayerResult.accuracy || 0,
+        streak: currentPlayerResult.streak || 0
+      };
+    }
+    // Single-player uses local state
+    return {
+      score,
+      correctAnswers,
+      totalAnswers,
+      accuracy: totalAnswers > 0 ? Math.round((correctAnswers / totalAnswers) * 100) : 0,
+      streak
+    };
+  };
+
+  const playerStats = getPlayerStats();
+  const avgSpeed = playerStats.totalAnswers > 0 ? (60 / playerStats.totalAnswers).toFixed(1) : "0.0";
 
   const handlePlayAgain = () => {
     resetGame();
@@ -32,7 +53,7 @@ export default function Results() {
   };
 
   const handleShareResult = async () => {
-    const text = `I just scored ${score} points with ${accuracy}% accuracy in Tables Duel! 🎯`;
+    const text = `I just scored ${playerStats.score} points with ${playerStats.accuracy}% accuracy in Tables Duel! 🎯`;
     
     if (navigator.share) {
       try {
@@ -110,8 +131,8 @@ export default function Results() {
           {gameMode === "2-player" ? (isWinner ? "You Won!" : "Good Game!") : "Great Job!"}
         </h2>
         <p className="text-muted-foreground">
-          You nailed <span className="font-semibold text-success" data-testid="text-correct-answers">{correctAnswers}</span> correct 
-          with <span className="font-semibold text-success" data-testid="text-accuracy">{accuracy}%</span> accuracy!
+          You nailed <span className="font-semibold text-success" data-testid="text-correct-answers">{playerStats.correctAnswers}</span> correct 
+          with <span className="font-semibold text-success" data-testid="text-accuracy">{playerStats.accuracy}%</span> accuracy!
         </p>
       </div>
 
@@ -122,11 +143,11 @@ export default function Results() {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-primary" data-testid="text-final-score">{score}</div>
+              <div className="text-2xl font-bold text-primary" data-testid="text-final-score">{playerStats.score}</div>
               <div className="text-sm text-muted-foreground">Final Score</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-secondary" data-testid="text-best-streak">{streak}</div>
+              <div className="text-2xl font-bold text-secondary" data-testid="text-best-streak">{playerStats.streak}</div>
               <div className="text-sm text-muted-foreground">Best Streak</div>
             </div>
           </div>
@@ -137,7 +158,7 @@ export default function Results() {
               <div className="text-sm text-muted-foreground">Avg Speed</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-success" data-testid="text-final-accuracy">{accuracy}%</div>
+              <div className="text-2xl font-bold text-success" data-testid="text-final-accuracy">{playerStats.accuracy}%</div>
               <div className="text-sm text-muted-foreground">Accuracy</div>
             </div>
           </div>

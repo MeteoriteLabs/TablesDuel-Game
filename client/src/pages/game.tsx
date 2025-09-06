@@ -118,21 +118,15 @@ export default function Game() {
       };
 
       const handleGameEnd = (data: any) => {
-        // Debug: Log received data
-        console.log("Game end data received:", JSON.stringify(data, null, 2));
-        
         // Update players with final scores from leaderboard
         if (data.leaderboard && data.leaderboard.length > 0) {
-          console.log("Setting players to:", data.leaderboard);
           setPlayers(data.leaderboard);
           
           // Update local player statistics from server data
           const currentPlayer = data.leaderboard.find((p: any) => p.id === playerId);
           if (currentPlayer) {
-            console.log("Current player data:", currentPlayer);
             setScore(currentPlayer.score);
             setStreak(currentPlayer.streak);
-            // Note: correctAnswers and totalAnswers are tracked locally and should be accurate
           }
         }
         setGameStatus("completed");
