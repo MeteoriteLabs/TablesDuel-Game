@@ -59,7 +59,7 @@ export class GameManager {
     const roomState = this.rooms.get(roomId);
     const dbRoom = await storage.getGameRoom(roomId);
     
-    if (!roomState || !dbRoom || roomState.players.length >= 2) {
+    if (!roomState || !dbRoom || roomState.players.length >= 10) {
       return null;
     }
 

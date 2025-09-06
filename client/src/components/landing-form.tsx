@@ -68,7 +68,7 @@ export function LandingForm() {
 
     setIsLoading(true);
     resetGame();
-    setGameMode('2-player');
+    setGameMode('multiplayer');
 
     try {
       await socketManager.connect();
@@ -113,7 +113,7 @@ export function LandingForm() {
 
     setIsLoading(true);
     resetGame();
-    setGameMode('2-player');
+    setGameMode('multiplayer');
 
     try {
       await socketManager.connect();

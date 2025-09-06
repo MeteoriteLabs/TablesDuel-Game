@@ -104,13 +104,15 @@ export default function Lobby() {
             </div>
           ))}
 
-          {players.length < 2 && (
+          {players.length < 10 && (
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border-2 border-dashed border-muted">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                  <span className="text-xs text-muted-foreground">?</span>
+                  <span className="text-xs text-muted-foreground">+</span>
                 </div>
-                <span className="text-muted-foreground">Waiting for player 2...</span>
+                <span className="text-muted-foreground">
+                  Waiting for more players... ({players.length}/10)
+                </span>
               </div>
             </div>
           )}

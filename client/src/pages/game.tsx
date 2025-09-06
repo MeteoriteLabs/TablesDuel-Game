@@ -80,7 +80,7 @@ export default function Game() {
 
   // WebSocket listeners for multiplayer
   useEffect(() => {
-    if (gameMode === "2-player") {
+    if (gameMode === "multiplayer") {
       const handleAnswerResult = (data: any) => {
         setAnswerFeedback(data.correct);
         setTimeout(() => setAnswerFeedback(null), 600);

@@ -23,9 +23,17 @@ export default function Results() {
 
   const { toast } = useToast();
 
+  // Get leaderboard for multiplayer
+  const leaderboard = gameMode === "multiplayer" 
+    ? [...players].sort((a, b) => b.score - a.score)
+    : [];
+
+  const currentPlayerResult = leaderboard.find(p => p.id === playerId);
+  const isWinner = currentPlayerResult && leaderboard[0]?.id === playerId;
+
   // For multiplayer, use server data; for single-player, use local state
   const getPlayerStats = () => {
-    if (gameMode === "2-player" && currentPlayerResult) {
+    if (gameMode === "multiplayer" && currentPlayerResult) {
       return {
         score: currentPlayerResult.score || 0,
         correctAnswers: currentPlayerResult.correctAnswers || 0,
@@ -82,14 +90,6 @@ export default function Results() {
     }
   };
 
-  // Get leaderboard for multiplayer
-  const leaderboard = gameMode === "2-player" 
-    ? [...players].sort((a, b) => b.score - a.score)
-    : [];
-
-  const currentPlayerResult = leaderboard.find(p => p.id === playerId);
-  const isWinner = currentPlayerResult && leaderboard[0]?.id === playerId;
-
   // Format the last question for solution display
   const formatQuestion = (question: any) => {
     if (!question) return null;
@@ -128,7 +128,7 @@ export default function Results() {
           <Trophy className="w-10 h-10 text-secondary-foreground" />
         </div>
         <h2 className="text-3xl font-bold text-foreground">
-          {gameMode === "2-player" ? (isWinner ? "You Won!" : "Good Game!") : "Great Job!"}
+          {gameMode === "multiplayer" ? (isWinner ? "You Won!" : "Good Game!") : "Great Job!"}
         </h2>
         <p className="text-muted-foreground">
           You nailed <span className="font-semibold text-success" data-testid="text-correct-answers">{playerStats.correctAnswers}</span> correct 

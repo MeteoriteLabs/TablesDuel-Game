@@ -8,6 +8,7 @@ import { useGameState } from "@/lib/game-state";
 import { socketManager } from "@/lib/socket";
 import { queryClient } from "./lib/queryClient";
 import Home from "@/pages/home";
+import { JoinPage } from "@/pages/join";
 import Lobby from "@/pages/lobby";
 import Game from "@/pages/game";
 import Results from "@/pages/results";
@@ -33,62 +34,14 @@ function GameRouter() {
 function RoomJoiner() {
   const params = useParams();
   const roomId = params.roomId;
-  const { 
-    setRoomId, 
-    setPlayerId, 
-    setGameMode, 
-    setGameStatus, 
-    setPlayers,
-    gameStatus,
-    playerName 
-  } = useGameState();
+  const { gameStatus } = useGameState();
 
-  useEffect(() => {
-    if (roomId && gameStatus === 'menu') {
-      // If user hasn't entered their name yet, we need them to do that first
-      if (!playerName.trim()) {
-        // Stay on home page but set room mode
-        setGameMode('2-player');
-        setRoomId(roomId);
-        return;
-      }
+  // If we're in the menu state, show the dedicated join page
+  if (gameStatus === 'menu' && roomId) {
+    return <JoinPage roomId={roomId} />;
+  }
 
-      // Connect and join the room
-      const joinRoom = async () => {
-        try {
-          await socketManager.connect();
-          
-          // Listen for join response
-          socketManager.on("room:joined", (data) => {
-            setRoomId(data.roomId);
-            setPlayerId(data.playerId);
-            setGameStatus("lobby");
-          });
-
-          socketManager.on("room:state", (data) => {
-            setPlayers(data.players);
-          });
-
-          socketManager.on("error", (data) => {
-            alert(data.message || "Failed to join room");
-            setGameStatus("menu");
-          });
-
-          socketManager.send("room:join", {
-            roomId,
-            playerName: playerName.trim(),
-          });
-        } catch (error) {
-          console.error("Error joining room:", error);
-          alert("Failed to join room. Please try again.");
-          setGameStatus("menu");
-        }
-      };
-
-      joinRoom();
-    }
-  }, [roomId, gameStatus, playerName, setRoomId, setPlayerId, setGameMode, setGameStatus, setPlayers]);
-
+  // Otherwise show the normal game router
   return <GameRouter />;
 }
 

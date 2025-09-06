@@ -4,7 +4,7 @@ import { GameSettings, Question, QuestionHistory, PlayerState } from '@shared/sc
 interface GameState {
   // Game settings
   playerName: string;
-  gameMode: '1-player' | '2-player';
+  gameMode: '1-player' | 'multiplayer';
   settings: GameSettings;
   
   // Room state
@@ -34,7 +34,7 @@ interface GameState {
   
   // Actions
   setPlayerName: (name: string) => void;
-  setGameMode: (mode: '1-player' | '2-player') => void;
+  setGameMode: (mode: '1-player' | 'multiplayer') => void;
   setSettings: (settings: GameSettings) => void;
   setRoomId: (roomId: string | null) => void;
   setPlayerId: (playerId: string | null) => void;
