@@ -61,14 +61,34 @@ export default function Game() {
     }
   }, [gameMode, timeRemaining, setTimeRemaining, setGameStatus]);
 
+  const getDifficultyPoints = () => {
+    switch (settings.difficulty) {
+      case "easy": return 1;
+      case "medium": return 2;
+      case "hard": return 3;
+      default: return 2;
+    }
+  };
+
   // WebSocket listeners for multiplayer
   useEffect(() => {
     if (gameMode === "2-player") {
-      socketManager.on("answer:result", (data) => {
-        handleAnswerResult(data.correct);
-      });
+      const handleAnswerResult = (data: any) => {
+        setAnswerFeedback(data.correct);
+        setTimeout(() => setAnswerFeedback(null), 600);
 
-      socketManager.on("game:update", (data) => {
+        if (data.correct) {
+          addToast("success", `Correct! +${getDifficultyPoints()} points`);
+          incrementCorrectAnswers();
+        } else {
+          addToast("error", "Try again!");
+        }
+
+        incrementTotalAnswers();
+        setCurrentAnswer("");
+      };
+
+      const handleGameUpdate = (data: any) => {
         if (data.question) setCurrentQuestion(data.question);
         if (data.questionIndex !== undefined) setQuestionIndex(data.questionIndex);
         if (data.scores && playerId && data.scores[playerId] !== undefined) {
@@ -78,19 +98,23 @@ export default function Game() {
           setStreak(data.streaks[playerId]);
         }
         if (data.timeRemaining !== undefined) setTimeRemaining(data.timeRemaining);
-      });
+      };
 
-      socketManager.on("game:end", () => {
+      const handleGameEnd = () => {
         setGameStatus("completed");
-      });
+      };
+
+      socketManager.on("answer:result", handleAnswerResult);
+      socketManager.on("game:update", handleGameUpdate);
+      socketManager.on("game:end", handleGameEnd);
 
       return () => {
-        socketManager.off("answer:result", () => {});
-        socketManager.off("game:update", () => {});
-        socketManager.off("game:end", () => {});
+        socketManager.off("answer:result", handleAnswerResult);
+        socketManager.off("game:update", handleGameUpdate);
+        socketManager.off("game:end", handleGameEnd);
       };
     }
-  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setTimeRemaining, setGameStatus]);
+  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setTimeRemaining, setGameStatus, addToast, incrementCorrectAnswers, incrementTotalAnswers, setCurrentAnswer]);
 
   const handleAnswerResult = (correct: boolean) => {
     setAnswerFeedback(correct);
@@ -105,15 +129,6 @@ export default function Game() {
 
     incrementTotalAnswers();
     setCurrentAnswer("");
-  };
-
-  const getDifficultyPoints = () => {
-    switch (settings.difficulty) {
-      case "easy": return 1;
-      case "medium": return 2;
-      case "hard": return 3;
-      default: return 2;
-    }
   };
 
   const handleSubmitAnswer = () => {

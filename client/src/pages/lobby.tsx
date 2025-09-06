@@ -19,19 +19,22 @@ export default function Lobby() {
 
   useEffect(() => {
     // Listen for room state updates
-    socketManager.on("room:state", (data) => {
+    const handleRoomState = (data: any) => {
       setPlayers(data.players);
-    });
+    };
 
-    socketManager.on("game:start", (data) => {
+    const handleGameStart = (data: any) => {
       setCurrentQuestion(data.question);
       setQuestionIndex(0);
       setGameStatus("active");
-    });
+    };
+
+    socketManager.on("room:state", handleRoomState);
+    socketManager.on("game:start", handleGameStart);
 
     return () => {
-      socketManager.off("room:state", () => {});
-      socketManager.off("game:start", () => {});
+      socketManager.off("room:state", handleRoomState);
+      socketManager.off("game:start", handleGameStart);
     };
   }, [setPlayers, setGameStatus, setCurrentQuestion, setQuestionIndex]);
 
