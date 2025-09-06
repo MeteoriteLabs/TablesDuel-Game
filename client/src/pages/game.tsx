@@ -20,6 +20,7 @@ export default function Game() {
     playerId,
     setCurrentQuestion,
     setLastQuestion,
+    addQuestionToHistory,
     setQuestionIndex,
     setCurrentAnswer,
     setTimeRemaining,
@@ -88,6 +89,9 @@ export default function Game() {
         if (currentQuestion && currentAnswer) {
           const correctAnswer = getCorrectAnswer(currentQuestion);
           setLastQuestion(currentQuestion, currentAnswer, correctAnswer);
+          
+          // Add to question history
+          addQuestionToHistory(currentQuestion, currentAnswer, correctAnswer, data.correct);
         }
 
         if (data.correct) {
@@ -117,6 +121,14 @@ export default function Game() {
         // Update players with final scores from leaderboard
         if (data.leaderboard && data.leaderboard.length > 0) {
           setPlayers(data.leaderboard);
+          
+          // Update local player statistics from server data
+          const currentPlayer = data.leaderboard.find((p: any) => p.id === playerId);
+          if (currentPlayer) {
+            setScore(currentPlayer.score);
+            setStreak(currentPlayer.streak);
+            // Note: correctAnswers and totalAnswers are tracked locally and should be accurate
+          }
         }
         setGameStatus("completed");
       };
@@ -131,7 +143,7 @@ export default function Game() {
         socketManager.off("game:end", handleGameEnd);
       };
     }
-  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setTimeRemaining, setGameStatus, addToast, incrementCorrectAnswers, incrementTotalAnswers, setCurrentAnswer, setLastQuestion, currentQuestion, currentAnswer]);
+  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setTimeRemaining, setGameStatus, addToast, incrementCorrectAnswers, incrementTotalAnswers, setCurrentAnswer, setLastQuestion, addQuestionToHistory, currentQuestion, currentAnswer]);
 
   const handleAnswerResult = (correct: boolean) => {
     setAnswerFeedback(correct);
@@ -176,6 +188,9 @@ export default function Game() {
 
       // Store last question for solution display
       setLastQuestion(currentQuestion, currentAnswer, correctAnswer);
+      
+      // Add to question history
+      addQuestionToHistory(currentQuestion, currentAnswer, correctAnswer, isCorrect);
 
       // Check win conditions first
       if (settings.mode === "target" && score >= (settings.targetScore || 20)) {

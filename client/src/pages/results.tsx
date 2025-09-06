@@ -1,5 +1,6 @@
-import { Trophy, RotateCcw, Settings, Share2, BookOpen } from "lucide-react";
+import { Trophy, RotateCcw, Settings, Share2, BookOpen, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useGameState } from "@/lib/game-state";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,6 +16,7 @@ export default function Results() {
     lastQuestion,
     lastAnswer,
     lastCorrectAnswer,
+    questionHistory,
     setGameStatus,
     resetGame,
   } = useGameState();
@@ -210,37 +212,77 @@ export default function Results() {
         </div>
       )}
 
-      {/* Last Question Solution */}
-      {lastQuestion && (
+      {/* Question History */}
+      {questionHistory.length > 0 && (
         <div className="bg-card rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex items-center gap-2 justify-center text-lg font-semibold text-foreground">
             <BookOpen className="w-5 h-5" />
-            Last Question Solution
+            All Questions & Solutions
           </div>
           
-          <div className="bg-muted/50 rounded-xl p-4 space-y-3">
-            <div className="text-center">
-              <div className="text-lg font-mono text-foreground mb-2" data-testid="text-last-question">
-                {formatQuestion(lastQuestion)}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Your answer: <span className={`font-semibold ${
-                  parseInt(lastAnswer) === getCorrectAnswer(lastQuestion) 
-                    ? 'text-success' 
-                    : 'text-destructive'
-                }`} data-testid="text-your-answer">
-                  {lastAnswer || "No answer"}
-                </span>
-              </div>
-            </div>
-            
-            <div className="border-t border-border pt-3 text-center">
-              <div className="text-sm text-muted-foreground mb-1">Correct Answer:</div>
-              <div className="text-2xl font-bold text-success" data-testid="text-correct-solution">
-                {getCorrectAnswer(lastQuestion)}
-              </div>
-            </div>
-          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="question-history">
+              <AccordionTrigger className="text-base font-medium" data-testid="accordion-trigger-questions">
+                View {questionHistory.length} Question{questionHistory.length !== 1 ? 's' : ''} & Solutions
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-3 pt-2">
+                  {questionHistory.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`p-4 rounded-lg border-l-4 ${
+                        item.isCorrect 
+                          ? 'bg-success/10 border-l-success' 
+                          : 'bg-destructive/10 border-l-destructive'
+                      }`}
+                      data-testid={`question-item-${index}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          Question {index + 1}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {item.isCorrect ? (
+                            <CheckCircle className="w-4 h-4 text-success" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-destructive" />
+                          )}
+                          <span className={`text-sm font-medium ${
+                            item.isCorrect ? 'text-success' : 'text-destructive'
+                          }`}>
+                            {item.isCorrect ? 'Correct' : 'Wrong'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="text-lg font-mono text-foreground" data-testid={`question-text-${index}`}>
+                          {formatQuestion(item.question)}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Your answer: </span>
+                            <span className={`font-semibold ${
+                              item.isCorrect ? 'text-success' : 'text-destructive'
+                            }`} data-testid={`user-answer-${index}`}>
+                              {item.userAnswer || "No answer"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Correct answer: </span>
+                            <span className="font-semibold text-success" data-testid={`correct-answer-${index}`}>
+                              {item.correctAnswer}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       )}
 
