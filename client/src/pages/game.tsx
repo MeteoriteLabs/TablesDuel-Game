@@ -24,6 +24,7 @@ export default function Game() {
     setTimeRemaining,
     setScore,
     setStreak,
+    setPlayers,
     incrementCorrectAnswers,
     incrementTotalAnswers,
     setGameStatus,
@@ -100,7 +101,11 @@ export default function Game() {
         if (data.timeRemaining !== undefined) setTimeRemaining(data.timeRemaining);
       };
 
-      const handleGameEnd = () => {
+      const handleGameEnd = (data: any) => {
+        // Update players with final scores from leaderboard
+        if (data.leaderboard && data.leaderboard.length > 0) {
+          setPlayers(data.leaderboard);
+        }
         setGameStatus("completed");
       };
 
