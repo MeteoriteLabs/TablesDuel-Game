@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameSettings, Question, PlayerState } from '@shared/schema';
+import { GameSettings, Question, QuestionHistory, PlayerState } from '@shared/schema';
 
 interface GameState {
   // Game settings
@@ -17,6 +17,7 @@ interface GameState {
   lastQuestion: Question | null;
   lastAnswer: string;
   lastCorrectAnswer: number | null;
+  questionHistory: QuestionHistory[];
   questionIndex: number;
   currentAnswer: string;
   timeRemaining: number | null;
@@ -40,6 +41,7 @@ interface GameState {
   setPlayers: (players: PlayerState[]) => void;
   setCurrentQuestion: (question: Question | null) => void;
   setLastQuestion: (question: Question | null, answer: string, correctAnswer: number | null) => void;
+  addQuestionToHistory: (question: Question, userAnswer: string, correctAnswer: number, isCorrect: boolean) => void;
   setQuestionIndex: (index: number) => void;
   setCurrentAnswer: (answer: string) => void;
   setTimeRemaining: (time: number | null) => void;
@@ -71,6 +73,7 @@ export const useGameState = create<GameState>((set, get) => ({
   lastQuestion: null,
   lastAnswer: '',
   lastCorrectAnswer: null,
+  questionHistory: [],
   questionIndex: 0,
   currentAnswer: '',
   timeRemaining: null,
@@ -94,6 +97,15 @@ export const useGameState = create<GameState>((set, get) => ({
     lastAnswer: answer, 
     lastCorrectAnswer: correctAnswer 
   }),
+  addQuestionToHistory: (question, userAnswer, correctAnswer, isCorrect) => set(state => ({
+    questionHistory: [...state.questionHistory, {
+      question,
+      userAnswer,
+      correctAnswer,
+      isCorrect,
+      timestamp: Date.now()
+    }]
+  })),
   setQuestionIndex: (index) => set({ questionIndex: index }),
   setCurrentAnswer: (answer) => set({ currentAnswer: answer }),
   setTimeRemaining: (time) => set({ timeRemaining: time }),
@@ -112,6 +124,7 @@ export const useGameState = create<GameState>((set, get) => ({
     lastQuestion: null,
     lastAnswer: '',
     lastCorrectAnswer: null,
+    questionHistory: [],
     questionIndex: 0,
     currentAnswer: '',
     timeRemaining: null,

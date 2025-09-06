@@ -47,6 +47,15 @@ export const questionSchema = z.object({
   variant: z.enum(["axb=?", "?xb=c", "ax?=c"]),
 });
 
+// Question History Schema
+export const questionHistorySchema = z.object({
+  question: questionSchema,
+  userAnswer: z.string(),
+  correctAnswer: z.number(),
+  isCorrect: z.boolean(),
+  timestamp: z.number(),
+});
+
 // Player State Schema
 export const playerStateSchema = z.object({
   id: z.string(),
@@ -92,5 +101,6 @@ export type GameRoom = typeof gameRooms.$inferSelect;
 export type GameParticipant = typeof gameParticipants.$inferSelect;
 export type GameSettings = z.infer<typeof gameSettingsSchema>;
 export type Question = z.infer<typeof questionSchema>;
+export type QuestionHistory = z.infer<typeof questionHistorySchema>;
 export type PlayerState = z.infer<typeof playerStateSchema>;
 export type RoomState = z.infer<typeof roomStateSchema>;
