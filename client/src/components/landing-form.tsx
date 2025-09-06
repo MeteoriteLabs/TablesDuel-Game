@@ -12,6 +12,7 @@ export function LandingForm() {
     playerName,
     gameMode,
     settings,
+    roomId,
     setPlayerName,
     setGameMode,
     setSettings,
@@ -44,20 +45,40 @@ export function LandingForm() {
         setQuestionIndex(0);
         setGameStatus("active");
       } else {
-        // Two player mode - connect to WebSocket and create room
+        // Two player mode - connect to WebSocket
         await socketManager.connect();
         
-        // Listen for room creation response
-        socketManager.on("room:created", (data) => {
-          setRoomId(data.roomId);
-          setPlayerId(data.playerId);
-        });
-        
-        socketManager.send("room:create", {
-          playerName: playerName.trim(),
-          settings,
-        });
-        setGameStatus("lobby");
+        if (roomId) {
+          // Join existing room
+          socketManager.on("room:joined", (data) => {
+            setRoomId(data.roomId);
+            setPlayerId(data.playerId);
+            setGameStatus("lobby");
+          });
+
+          socketManager.on("error", (data) => {
+            alert(data.message || "Failed to join room");
+            setRoomId(null);
+            setGameStatus("menu");
+          });
+
+          socketManager.send("room:join", {
+            roomId,
+            playerName: playerName.trim(),
+          });
+        } else {
+          // Create new room
+          socketManager.on("room:created", (data) => {
+            setRoomId(data.roomId);
+            setPlayerId(data.playerId);
+            setGameStatus("lobby");
+          });
+          
+          socketManager.send("room:create", {
+            playerName: playerName.trim(),
+            settings,
+          });
+        }
       }
     } catch (error) {
       console.error("Error starting game:", error);
@@ -87,7 +108,9 @@ export function LandingForm() {
           <span className="text-4xl text-primary-foreground font-bold">×</span>
         </div>
         <h2 className="text-3xl font-bold text-foreground">Tables Duel</h2>
-        <p className="text-muted-foreground">Master your times tables — solo or with a friend!</p>
+        <p className="text-muted-foreground">
+          {roomId ? `Join room ${roomId} and compete with a friend!` : "Master your times tables — solo or with a friend!"}
+        </p>
       </div>
 
       <div className="bg-card rounded-2xl p-6 shadow-lg space-y-4">
@@ -212,7 +235,7 @@ export function LandingForm() {
           disabled={isLoading}
           data-testid="button-start-game"
         >
-          {isLoading ? "Starting..." : "Start Game"}
+          {isLoading ? (roomId ? "Joining..." : "Starting...") : (roomId ? "Join Room" : "Start Game")}
         </Button>
       </div>
 
