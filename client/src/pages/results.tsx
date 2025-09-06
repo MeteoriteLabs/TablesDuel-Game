@@ -1,4 +1,4 @@
-import { Trophy, RotateCcw, Settings, Share2 } from "lucide-react";
+import { Trophy, RotateCcw, Settings, Share2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGameState } from "@/lib/game-state";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,9 @@ export default function Results() {
     totalAnswers,
     players,
     playerId,
+    lastQuestion,
+    lastAnswer,
+    lastCorrectAnswer,
     setGameStatus,
     resetGame,
   } = useGameState();
@@ -63,6 +66,37 @@ export default function Results() {
 
   const currentPlayerResult = leaderboard.find(p => p.id === playerId);
   const isWinner = currentPlayerResult && leaderboard[0]?.id === playerId;
+
+  // Format the last question for solution display
+  const formatQuestion = (question: any) => {
+    if (!question) return null;
+    
+    switch (question.variant) {
+      case "axb=?":
+        return `${question.a} × ${question.b} = ?`;
+      case "?xb=c":
+        return `? × ${question.b} = ${question.c}`;
+      case "ax?=c":
+        return `${question.a} × ? = ${question.c}`;
+      default:
+        return null;
+    }
+  };
+
+  const getCorrectAnswer = (question: any) => {
+    if (!question) return null;
+    
+    switch (question.variant) {
+      case "axb=?":
+        return question.a * question.b;
+      case "?xb=c":
+        return question.c / question.b;
+      case "ax?=c":
+        return question.c / question.a;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="space-y-6 pt-8">
@@ -172,6 +206,40 @@ export default function Results() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Last Question Solution */}
+      {lastQuestion && (
+        <div className="bg-card rounded-2xl p-6 shadow-lg space-y-4">
+          <div className="flex items-center gap-2 justify-center text-lg font-semibold text-foreground">
+            <BookOpen className="w-5 h-5" />
+            Last Question Solution
+          </div>
+          
+          <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+            <div className="text-center">
+              <div className="text-lg font-mono text-foreground mb-2" data-testid="text-last-question">
+                {formatQuestion(lastQuestion)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Your answer: <span className={`font-semibold ${
+                  parseInt(lastAnswer) === getCorrectAnswer(lastQuestion) 
+                    ? 'text-success' 
+                    : 'text-destructive'
+                }`} data-testid="text-your-answer">
+                  {lastAnswer || "No answer"}
+                </span>
+              </div>
+            </div>
+            
+            <div className="border-t border-border pt-3 text-center">
+              <div className="text-sm text-muted-foreground mb-1">Correct Answer:</div>
+              <div className="text-2xl font-bold text-success" data-testid="text-correct-solution">
+                {getCorrectAnswer(lastQuestion)}
+              </div>
+            </div>
           </div>
         </div>
       )}

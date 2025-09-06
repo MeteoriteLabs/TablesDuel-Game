@@ -19,6 +19,7 @@ export default function Game() {
     streak,
     playerId,
     setCurrentQuestion,
+    setLastQuestion,
     setQuestionIndex,
     setCurrentAnswer,
     setTimeRemaining,
@@ -58,9 +59,14 @@ export default function Game() {
       }, 1000);
       return () => clearTimeout(timer);
     } else if (timeRemaining === 0) {
+      // Store last question when time runs out
+      if (currentQuestion && currentAnswer) {
+        const correctAnswer = getCorrectAnswer(currentQuestion);
+        setLastQuestion(currentQuestion, currentAnswer, correctAnswer);
+      }
       setGameStatus("completed");
     }
-  }, [gameMode, timeRemaining, setTimeRemaining, setGameStatus]);
+  }, [gameMode, timeRemaining, setTimeRemaining, setGameStatus, currentQuestion, currentAnswer, setLastQuestion]);
 
   const getDifficultyPoints = () => {
     switch (settings.difficulty) {
@@ -77,6 +83,12 @@ export default function Game() {
       const handleAnswerResult = (data: any) => {
         setAnswerFeedback(data.correct);
         setTimeout(() => setAnswerFeedback(null), 600);
+
+        // Store last question for solution display  
+        if (currentQuestion && currentAnswer) {
+          const correctAnswer = getCorrectAnswer(currentQuestion);
+          setLastQuestion(currentQuestion, currentAnswer, correctAnswer);
+        }
 
         if (data.correct) {
           addToast("success", `Correct! +${getDifficultyPoints()} points`);
@@ -119,7 +131,7 @@ export default function Game() {
         socketManager.off("game:end", handleGameEnd);
       };
     }
-  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setTimeRemaining, setGameStatus, addToast, incrementCorrectAnswers, incrementTotalAnswers, setCurrentAnswer]);
+  }, [gameMode, playerId, setCurrentQuestion, setQuestionIndex, setScore, setStreak, setTimeRemaining, setGameStatus, addToast, incrementCorrectAnswers, incrementTotalAnswers, setCurrentAnswer, setLastQuestion, currentQuestion, currentAnswer]);
 
   const handleAnswerResult = (correct: boolean) => {
     setAnswerFeedback(correct);
@@ -162,16 +174,24 @@ export default function Game() {
         setStreak(0);
       }
 
+      // Store last question for solution display
+      setLastQuestion(currentQuestion, currentAnswer, correctAnswer);
+
+      // Check win conditions first
+      if (settings.mode === "target" && score >= (settings.targetScore || 20)) {
+        setGameStatus("completed");
+        return;
+      }
+
       // Generate next question
       if (questionGenerator) {
         const nextQuestion = questionGenerator.next().value;
-        setCurrentQuestion(nextQuestion);
-        setQuestionIndex(questionIndex + 1);
-      }
-
-      // Check win conditions
-      if (settings.mode === "target" && score >= (settings.targetScore || 20)) {
-        setGameStatus("completed");
+        if (nextQuestion) {
+          setCurrentQuestion(nextQuestion);
+          setQuestionIndex(questionIndex + 1);
+        } else {
+          setGameStatus("completed");
+        }
       }
     } else {
       // Multiplayer logic - send to server
